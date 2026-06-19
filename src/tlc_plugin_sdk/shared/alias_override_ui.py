@@ -70,8 +70,7 @@ ALIAS_OVERRIDE_UI_JS = (
     "  });\n"
     "}\n"
     "\n"
-    "function _tlcFetchAndPopulateOverrides(idPrefix, tableUrl,"
-    " computeServiceUrl, authHeader, savedOverrides) {\n"
+    "function _tlcFetchAndPopulateOverrides(idPrefix, tableUrl, savedOverrides) {\n"
     "  var list = document.getElementById(idPrefix + '-alias-override-list');\n"
     "  var container = document.getElementById(idPrefix + '-alias-override-container');\n"
     "  if (!list) return;\n"
@@ -85,12 +84,7 @@ ALIAS_OVERRIDE_UI_JS = (
     "Loading aliases...</span>';\n"
     "  var _aliasPath = '/api/aliases/for-table?url='"
     " + encodeURIComponent(tableUrl);\n"
-    "  var _fetchP = (window.PLUGIN_API && window.PLUGIN_API.computeFetch)\n"
-    "    ? window.PLUGIN_API.computeFetch(_aliasPath)\n"
-    "    : fetch(computeServiceUrl + _aliasPath,"
-    " {headers: {'Accept':'application/json'"
-    ", 'Authorization': authHeader || ''}});\n"
-    "  _fetchP\n"
+    "  window.PLUGIN_API.computeFetch(_aliasPath)\n"
     "    .then(function(r) { return r.json(); })\n"
     "    .then(function(data) {\n"
     "      var aliases = data.aliases || [];\n"
@@ -175,7 +169,7 @@ def alias_override_ui_script() -> str:
 
     - ``_tlcAliasOverrideHtml(prefix)`` to render HTML
     - ``_tlcBindAliasOverrideToggle(prefix)`` after inserting the HTML
-    - ``_tlcFetchAndPopulateOverrides(prefix, tableUrl, computeUrl, auth)``
+    - ``_tlcFetchAndPopulateOverrides(prefix, tableUrl, savedOverrides)``
     - ``_tlcGetAliasOverrides(prefix)`` at submit time
 
     The override section is automatically hidden when all alias paths
