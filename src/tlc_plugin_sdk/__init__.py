@@ -1,0 +1,47 @@
+# =============================================================================
+# <copyright>
+# Copyright (c) 2026 3LC Inc. All rights reserved.
+#
+# All rights are reserved. Reproduction or transmission in whole or in part, in
+# any form or by any means, electronic, mechanical or otherwise, is prohibited
+# without the prior written permission of the copyright owner.
+# </copyright>
+# =============================================================================
+"""Import-light plugin SDK — the contract surface a plugin programs against.
+
+This is the public import path for the plugin contract. Importing it must **not**
+pull in the heavy server stack (litestar, python-socketio, uvicorn, the queues,
+discovery): a ``venv``-mode plugin installs only this surface, not the full
+service. See ``docs/plugin-isolation.md`` → "The SDK boundary: import-light
+module". The :mod:`test_plugin_sdk_import_light` test enforces the boundary.
+
+A plugin subclasses :class:`ComputePlugin` and implements at least
+``compute``/``get_ui_fragment``; the optional job/lifecycle hooks ship as no-op
+defaults. There is no ``register()`` to call — metadata lives in the plugin
+manifest, and the host discovers the plugin via its manifest ``entrypoint``.
+
+The contract is **defined here**, in :mod:`tlc_plugin_sdk.contract`, so it lives
+next to :class:`JobContext` and the venv worker on the import-light side of the SDK
+boundary — nothing in this package pulls in the server stack. This is the standalone
+public ``3lc-plugin-sdk`` distribution: the light base a venv plugin installs (the
+host ``3lc-compute`` depends on it, never the reverse). See ``CLAUDE.md``.
+"""
+
+from __future__ import annotations
+
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _pkg_version
+
+from tlc_plugin_sdk.contract import ComputePlugin
+from tlc_plugin_sdk.job_context import JobContext
+
+# Plugin contract (ABI) version = this package's own version — one source of truth
+# (the ``[project] version`` in pyproject), read via importlib.metadata rather than a
+# separately maintained constant. A plugin declares the contract it targets via its
+# manifest's ``sdk_version``.
+try:
+    SDK_CONTRACT_VERSION = _pkg_version("3lc-plugin-sdk")
+except PackageNotFoundError:  # running from a raw checkout that was never installed
+    SDK_CONTRACT_VERSION = "0.0.0"
+
+__all__ = ["SDK_CONTRACT_VERSION", "ComputePlugin", "JobContext"]

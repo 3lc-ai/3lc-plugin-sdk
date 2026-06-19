@@ -1,0 +1,99 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "3lc-plugin-sdk"
+# The plugin-contract (ABI) version. This IS tlc_plugin_sdk.SDK_CONTRACT_VERSION
+# (read back via importlib.metadata) — one source of truth. SemVer MAJOR.MINOR.PATCH;
+# < 1.0 signals the contract is not yet frozen. See docs/plugin-guide.md.
+version = "0.2.0"
+description = "Public Python SDK for building 3LC compute-service plugins (the import-light plugin contract)."
+requires-python = ">=3.10"
+readme = "README.md"
+authors = [{ name = "3LC", email = "support@3lc.ai" }]
+# NOTE: license intentionally unset pending the OSS license decision (see the private
+# 3lc-insights deployment doc §14.6 — the license audit is the long pole). Until then the
+# repo is "all rights reserved" by default. Do NOT publish to public PyPI before this lands.
+keywords = ["3lc", "plugin", "sdk", "machine-learning", "data-curation"]
+
+# The SDK is the ROOT of the plugin dependency graph: it depends only on the data plane
+# (3lc), the ASGI server the worker runs on (uvicorn, imported lazily), and the route
+# framework a plugin authors against (litestar). It must NEVER depend back on the host
+# (3lc-compute) or on any plugin. A plugin venv installs THIS, not the full service.
+dependencies = [
+    "3lc[pandas]>=3.0.0,<4.0.0",
+    "uvicorn>=0.34.0",
+    "litestar>=2.22.0,<3.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.15,<0.16",
+    "mypy>=1.14",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tlc_plugin_sdk"]
+core-metadata-version = "2.1"
+
+# ── DEV-ONLY (build-out week) — remove before any real publish ────────────────────
+# 3lc is not yet on a public index for this dev flow, so during the extraction build-out
+# we source it from the local monorepo checkout (sibling of this repo). The host
+# (3lc-compute) editable-sources THIS package the same way. See the 3lc-insights arc
+# tracker. The shippable form sources 3lc from the 3lc index instead.
+[tool.uv]
+environments = ["sys_platform == 'linux'", "sys_platform == 'darwin'", "sys_platform == 'win32'"]
+
+[[tool.uv.index]]
+name = "3lc-releases"
+url = "https://pypi.3lc.ai/public/repositories/releases-public"
+explicit = true
+
+[tool.uv.sources]
+# DEV-ONLY: build 3lc from the local monorepo checkout for this interpreter.
+3lc = { path = "../tlc-monorepo", editable = true }
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [".git", ".mypy_cache", ".ruff_cache", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["A", "C4", "E", "EM", "F", "I", "N", "PIE", "RUF", "SIM", "UP", "W"]
+ignore = ["N806", "N818", "SIM105", "SIM108", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+preview = true
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+# Untyped / not-a-dep boundary: 3lc + its native pieces ship no stubs; torch is not an
+# SDK dependency at all (it's an optional ML extra a plugin venv brings) but the shared
+# model-storage helper references it lazily, so mypy needs it treated as Any here.
+[[tool.mypy.overrides]]
+module = [
+    "tlc",
+    "tlc.*",
+    "tlcurl",
+    "tlcurl.*",
+    "_tlcsaas",
+    "_tlcsaas.*",
+    "pandas",
+    "pandas.*",
+    "torch",
+    "torch.*",
+]
+ignore_missing_imports = true
