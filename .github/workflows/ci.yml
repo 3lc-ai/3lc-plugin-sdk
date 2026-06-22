@@ -24,12 +24,10 @@ jobs:
         with:
           version: "0.8.15"
           enable-cache: true
-          # uv.lock is gitignored in this repo, so key the cache on the dependency
-          # declaration; uv resolves fresh from the index each run.
-          cache-dependency-glob: "pyproject.toml"
+          cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
-        run: uv sync --python 3.12 --dev
+        run: uv sync --python 3.12 --dev --locked
 
       - name: Ruff lint
         run: uv run --python 3.12 ruff check .
