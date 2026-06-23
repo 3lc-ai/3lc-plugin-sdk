@@ -1,11 +1,5 @@
 name: CI
 
-# Lint, type-check, and test the plugin SDK. ruff + mypy are static (keyless): 3lc resolves
-# from the public 3LC releases index and neither imports tlc. pytest DOES import tlc (key
-# activates on import), so it uses the repo's test secrets — same set + env block as
-# 3lc-examples: TLC_API_KEY + the RUNTIME_*/ENVIRONMENT_* dynamic pairs (which carry the
-# AUTH_MODE / sentry-environment config). NOTE: these are live creds in a (currently private)
-# repo — rotate/remove before the repo goes public, or move to OIDC/keyless import (tlc 3.1).
 on:
   pull_request:
     branches: [develop]
@@ -45,9 +39,6 @@ jobs:
       - name: pytest
         run: uv run --python 3.12 pytest -q
         env:
-          # Same secret set + env block as 3lc-examples. The RUNTIME_*/ENVIRONMENT_* pairs
-          # encode env-var name→value (e.g. auth mode / sentry environment), so do NOT also
-          # hardcode those keys here or the duplicate would be a template error.
           TLC_API_KEY: ${{ secrets.TLC_API_KEY }}
           ${{ secrets.RUNTIME_NAME }}: ${{ secrets.RUNTIME_VALUE }}
           ${{ secrets.ENVIRONMENT_NAME }}: ${{ secrets.ENVIRONMENT_VALUE }}
