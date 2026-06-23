@@ -1,11 +1,11 @@
 name: CI
 
-# Static gates only — ruff + mypy. Both are keyless: 3lc resolves from the public 3LC
-# releases index (no credentials), and neither tool imports tlc (mypy treats it as an
-# untyped boundary). pytest is intentionally NOT run here: every test imports tlc, which
-# activates a real API key, and we will not put a live key in this (public-destined) repo's
-# secrets. tlc-dependent tests run in the ADO pipelines instead (vault-reachable). Revisit
-# once tlc supports keyless import (3.1 AUTH_MODE=dev) or via OIDC/self-hosted runner.
+# Lint, type-check, and test the plugin SDK. ruff + mypy are static (keyless): 3lc resolves
+# from the public 3LC releases index and neither imports tlc. pytest DOES import tlc (key
+# activates on import), so it uses the repo's test secrets — same set + env block as
+# 3lc-examples: TLC_API_KEY + the RUNTIME_*/ENVIRONMENT_* dynamic pairs (which carry the
+# AUTH_MODE / sentry-environment config). NOTE: these are live creds in a (currently private)
+# repo — rotate/remove before the repo goes public, or move to OIDC/keyless import (tlc 3.1).
 on:
   pull_request:
     branches: [develop]
@@ -17,8 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-type:
-    name: ruff · mypy
+  lint-type-test:
+    name: ruff · mypy · pytest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,8 +42,15 @@ jobs:
       - name: mypy (strict)
         run: uv run --python 3.12 mypy src/
 
-      # NOTE: pytest is deliberately not run here — see the header comment (catch-22:
-      # tests import tlc → need a live key, which must not live in this public-destined repo).
+      - name: pytest
+        run: uv run --python 3.12 pytest -q
+        env:
+          # Same secret set + env block as 3lc-examples. The RUNTIME_*/ENVIRONMENT_* pairs
+          # encode env-var name→value (e.g. auth mode / sentry environment), so do NOT also
+          # hardcode those keys here or the duplicate would be a template error.
+          TLC_API_KEY: ${{ secrets.TLC_API_KEY }}
+          ${{ secrets.RUNTIME_NAME }}: ${{ secrets.RUNTIME_VALUE }}
+          ${{ secrets.ENVIRONMENT_NAME }}: ${{ secrets.ENVIRONMENT_VALUE }}
 
       - name: Minimize uv cache
         run: uv cache prune --ci
