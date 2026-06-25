@@ -24,21 +24,22 @@ keywords = ["3lc", "plugin", "sdk", "machine-learning", "data-curation"]
 #
 # The data plane (3lc) is an OPTIONAL extra: only `tlc_plugin_sdk.shared.*` (image / modality
 # / alias / url / model-storage helpers) imports `tlc`, and it does so lazily. Consumers that
-# use those helpers install `3lc-plugin-sdk[data]`; the contract core (ComputePlugin,
+# use those helpers install `3lc-plugin-sdk[shared]`; the contract core (ComputePlugin,
 # JobContext, the worker, the version constants, the .d.ts) needs no `tlc`. This keeps the base
 # featherweight for light consumers (e.g. the Hub frontend, which wants only JS_CONTRACT).
 # NOTE (direction): much of `shared.*` is expected to graduate into the core over time; when it
-# does, `3lc` likely returns to the base deps and `[data]` is kept as a no-op alias.
+# does, `3lc` likely returns to the base deps and `[shared]` is kept as a no-op alias.
 dependencies = [
     "uvicorn>=0.34.0",
     "litestar>=2.22.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
-# The data plane for `tlc_plugin_sdk.shared.*`. Required by any consumer that uses the shared
-# image/modality/alias/url/model-storage helpers (the host and the heavy venv plugins). The
-# shared modules import `tlc` lazily and raise a clear ImportError if it is missing.
-data = ["3lc[pandas]>=3.0.0,<4.0.0"]
+# The data plane behind `tlc_plugin_sdk.shared.*` (the extra is named for the module it unlocks).
+# Required by any consumer that uses the shared image/modality/alias/url/model-storage helpers
+# (the host and the heavy venv plugins). Those modules import `tlc` lazily, so a consumer that
+# never touches `shared.*` (e.g. the Hub frontend) installs the bare SDK and gets no `tlc`.
+shared = ["3lc[pandas]>=3.0.0,<4.0.0"]
 
 [dependency-groups]
 dev = [

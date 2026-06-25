@@ -23,10 +23,11 @@ contract a plugin programs against. It was extracted from the private `3lc-insig
    host-only SocketIO server must not be importable from here at all. `tests/test_import_light.py`
    enforces this (guards `litestar`/`socketio`/`uvicorn`/`tlc`) — keep it green.
 3. **Dependencies stay minimal.** Base = `uvicorn` + `litestar` only. `3lc` is an optional extra
-   (`3lc-plugin-sdk[data]`) used solely by the `shared.*` helpers — the contract core needs no data
-   plane, so light consumers (e.g. the Hub frontend) install the bare SDK. Adding a base dep widens
-   what every plugin venv must install — justify it. (Direction: as `shared.*` graduates into the
-   core, `3lc` likely returns to base with `[data]` kept as a no-op alias.)
+   (`3lc-plugin-sdk[shared]`, named for the `shared.*` module it unlocks) used solely by those
+   helpers — the contract core needs no data plane, so light consumers (e.g. the Hub frontend)
+   install the bare SDK. Adding a base dep widens what every plugin venv must install — justify it.
+   (Direction: as `shared.*` graduates into the core, `3lc` likely returns to base with `[shared]`
+   kept as a no-op alias.)
 4. **The contract is published — every public symbol is forever-ish.** Pre-1.0 we can still
    change it, but treat additions as the safe move and reshaping `JobContext`/`ComputePlugin` as
    breaking. The version is the contract version (see below).
