@@ -12,15 +12,18 @@ description = "Public Python SDK for building 3LC compute-service plugins (the i
 requires-python = ">=3.10"
 readme = "README.md"
 authors = [{ name = "3LC", email = "support@3lc.ai" }]
-# NOTE: license intentionally unset pending the OSS license decision (see the private
-# 3lc-insights deployment doc §14.6 — the license audit is the long pole). Until then the
-# repo is "all rights reserved" by default. Do NOT publish to public PyPI before this lands.
+# Apache-2.0: the SDK is the public plugin contract, intended to go open-source. `{ text }`
+# keeps the metadata at the pinned core-metadata 2.1 (the SPDX string form would force 2.4);
+# the OSI classifier below carries the machine-readable signal. Full text in ./LICENSE.
+license = { text = "Apache-2.0" }
 keywords = ["3lc", "plugin", "sdk", "machine-learning", "data-curation"]
-# "Private :: Do Not Upload" is a hard guard: public PyPI rejects any upload carrying it,
-# which enforces the no-public-PyPI rule above while the license is unset. Private indexes
-# (the 3lc releases index / CodeArtifact) ignore it, so it does not block our actual target.
+# "Private :: Do Not Upload" is a hard guard: public PyPI rejects any upload carrying it.
+# The license is now set (Apache-2.0), so this no longer gates on the license — it enforces
+# the "private until release" policy (we publish to the 3lc private index / CodeArtifact,
+# which ignore the classifier). Drop this line when the package goes public.
 classifiers = [
     "Private :: Do Not Upload",
+    "License :: OSI Approved :: Apache Software License",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
