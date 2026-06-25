@@ -32,11 +32,11 @@ version = release
 
 # -- General configuration ----------------------------------------------------
 extensions = [
-    "sphinx.ext.autodoc",       # pull docstrings from the package
-    "sphinx.ext.napoleon",      # understand Google-style Args/Returns/Raises
-    "sphinx.ext.intersphinx",   # cross-link to Python's stdlib docs
-    "sphinx.ext.viewcode",      # [source] links next to documented objects
-    "myst_parser",              # author guides are Markdown
+    "sphinx.ext.autodoc",  # pull docstrings from the package
+    "sphinx.ext.napoleon",  # understand Google-style Args/Returns/Raises
+    "sphinx.ext.intersphinx",  # cross-link to Python's stdlib docs
+    "sphinx.ext.viewcode",  # [source] links next to documented objects
+    "myst_parser",  # author guides are Markdown
 ]
 
 # .md -> MyST, .rst -> reStructuredText (the eval-rst blocks in api.md).
