@@ -7,7 +7,7 @@ name = "3lc-plugin-sdk"
 # The plugin-contract (ABI) version. This IS tlc_plugin_sdk.SDK_CONTRACT_VERSION
 # (read back via importlib.metadata) — one source of truth. SemVer MAJOR.MINOR.PATCH;
 # < 1.0 signals the contract is not yet frozen. See docs/plugin-guide.md.
-version = "0.2.0"
+version = "0.1.0"
 description = "Public Python SDK for building 3LC compute-service plugins (the import-light plugin contract)."
 requires-python = ">=3.10"
 readme = "README.md"
@@ -17,12 +17,7 @@ authors = [{ name = "3LC", email = "support@3lc.ai" }]
 # the OSI classifier below carries the machine-readable signal. Full text in ./LICENSE.
 license = { text = "Apache-2.0" }
 keywords = ["3lc", "plugin", "sdk", "machine-learning", "data-curation"]
-# "Private :: Do Not Upload" is a hard guard: public PyPI rejects any upload carrying it.
-# The license is now set (Apache-2.0), so this no longer gates on the license — it enforces
-# the "private until release" policy (we publish to the 3lc private index / CodeArtifact,
-# which ignore the classifier). Drop this line when the package goes public.
 classifiers = [
-    "Private :: Do Not Upload",
     "License :: OSI Approved :: Apache Software License",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

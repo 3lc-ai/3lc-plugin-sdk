@@ -8,7 +8,7 @@
 // </copyright>
 // =============================================================================
 //
-// JS_CONTRACT 0.2 — the browser-side plugin contract.
+// JS_CONTRACT 0.1 — the browser-side plugin contract.
 //
 // This file DECLARES the JavaScript surface a plugin's `ui.html` programs against.
 // It does not implement it:
@@ -194,7 +194,7 @@ interface PluginApi {
   context: PluginContext;
 
   /**
-   * The JS_CONTRACT version this host implements (e.g. "0.2"), so a fragment can
+   * The JS_CONTRACT version this host implements (e.g. "0.1"), so a fragment can
    * feature-detect the bridge. Derived by the frontend from the installed
    * `3lc-plugin-sdk` (`tlc_plugin_sdk.JS_CONTRACT`) — never a hardcoded literal —
    * and surfaced via `<body data-contract-version>`. '' if the host predates it.

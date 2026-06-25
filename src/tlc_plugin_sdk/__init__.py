@@ -53,7 +53,7 @@ except PackageNotFoundError:  # running from a raw checkout that was never insta
 # the other. Both are always ``<= `` the package version (a capability can only exist in a
 # shipped wheel). Bump the package version when EITHER ``PY_CONTRACT`` or ``JS_CONTRACT``
 # moves — the wheel is the thing a plugin actually pins, so it must cover both axes.
-PY_CONTRACT = "0.2"
-JS_CONTRACT = "0.2"
+PY_CONTRACT = "0.1"
+JS_CONTRACT = "0.1"
 
 __all__ = ["JS_CONTRACT", "PY_CONTRACT", "SDK_CONTRACT_VERSION", "ComputePlugin", "JobContext"]
