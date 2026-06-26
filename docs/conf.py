@@ -78,13 +78,7 @@ source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 # [...](#long-running-jobs-run_jobctx) resolve.
 myst_heading_anchors = 3
 
-# The author guide cross-links a couple of docs that live only in the private
-# 3lc-compute host repo (plugin-isolation.md, plugin-migration.md). Those targets
-# don't exist in this repo, so don't let `-W` turn the dangling links into a build
-# failure. This is scoped to MyST link resolution only — autodoc/reference errors
-# stay fatal. Remove once the guide's cross-doc links are repointed or inlined.
 suppress_warnings = [
-    "myst.xref_missing",
     # ts_type_xref_formatter is a function, so Sphinx's config cache can't
     # pickle it. Harmless — it just means the config isn't cached between runs.
     "config.cache",

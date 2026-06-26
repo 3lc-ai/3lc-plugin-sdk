@@ -11,9 +11,10 @@ The 3LC Compute Service uses a plugin architecture where each feature (training,
 
 The frontend has **zero knowledge** of any specific plugin. It discovers plugins at runtime via the `/api/plugins/` endpoint and renders their UI generically.
 
-> **Porting an existing plugin** to the current contract? See
-> [`plugin-migration.md`](./plugin-migration.md) — the accumulated list of
-> breaking changes, in migration order.
+> **Porting an existing plugin** to the current contract? This guide documents the contract in
+> full — the main changes to make are adopting `run_job(ctx)` for long-running work, relative
+> Litestar route handlers for custom endpoints, and the generic `job_update` channel for UI
+> updates (all covered below).
 
 **Important:** Plugins must **not** access the Object Service directly. The Object Service may not be reachable from the plugin's environment. All data access should go through the Compute Service, which uses the `tlc` SDK server-side.
 
@@ -98,8 +99,8 @@ paths. (`read_manifest()` also accepts a `[tool.tlc-compute]` table in a plugin'
 
 A `venv` plugin keeps the **same `plugin.toml`** for metadata and adds a separate
 `pyproject.toml` alongside it that declares only its isolated venv's dependencies (no
-`[tool.tlc-compute]` table there) — see `plugins/timm/`, `plugins/sam3/`, `plugins/yolo/` for
-the canonical layout and `docs/plugin-isolation.md` for the design.
+`[tool.tlc-compute]` table there) — see the `timm` / `sam3` / `yolo` plugins for the canonical
+layout, and the **Isolation** section below for how the two tiers run.
 
 ```toml
 # plugin.toml — the single source of truth for this plugin's metadata.
@@ -154,8 +155,7 @@ The plugin class is identical either way — `run_job(ctx)` talks only to `ctx`,
 the same code runs in-process or in a worker. `requires_gpu = true` routes the job
 through the shared GPU queue (one GPU job at a time, across every plugin);
 `requires_gpu = false` jobs run on the CPU queue. Both are host-owned; the plugin
-never touches a queue. See [`docs/plugin-isolation.md`](plugin-isolation.md) for
-the full isolation design.
+never touches a queue.
 
 > **Legacy:** `socketio_runner_module` / `socketio_runner_fn` are still read but
 > are vestigial — they only seeded a runner's initial state under the old job

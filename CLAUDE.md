@@ -1,16 +1,16 @@
 # 3lc-plugin-sdk — agent & contributor orientation
 
 This repo is the **public Python plugin SDK** for the 3LC compute service: the import-light
-contract a plugin programs against. It was extracted from the private `3lc-compute` host repo
-(provenance: commit `b3aefd7`), where the host runtime and the full design history live.
+contract a plugin programs against. The compute-service host that discovers and runs plugins lives
+in a separate repository and is **not** a dependency of this SDK.
 
 ## What this package is (and is not)
 
 - **Is:** the contract surface — `ComputePlugin`, `JobContext`, the worker entrypoint, and the
   `tlc_plugin_sdk.shared.*` helpers. Distribution `3lc-plugin-sdk`, import `tlc_plugin_sdk`.
-- **Is not:** the host. The compute service (`3lc-compute` / import `tlc_compute`) is a separate,
-  **private** package that *discovers and runs* plugins. It is not a dependency of this SDK and
-  its source is not here.
+- **Is not:** the host. The compute service (`3lc-compute` / import `tlc_compute`) is a separate
+  package that *discovers and runs* plugins. It is not a dependency of this SDK and its source is
+  not here.
 
 ## The invariants — do not break these
 
@@ -41,17 +41,15 @@ host implements a range. Don't reintroduce a separately-maintained version const
 
 ## Where the rest of the context lives
 
-The design rationale (the plugin-architecture arc, isolation model, contract-gap analysis,
-distribution/freeze plan) lives in the **private `3lc-compute` host repo** under `docs/`
-(`plugin-arc-tracker.md`, `plugin-isolation.md`, `plugin-contract-gaps.md`, the deployment doc
-§14). The author-facing slice travels with this repo as `docs/plugin-guide.md`. If you're an
-internal agent with monorepo access, read those for the "why."
+The author guide and API reference travel with this repo (`docs/plugin-guide.md`, `docs/api.md`)
+and are published at <https://3lc-ai.github.io/3lc-plugin-sdk/>. That guide is the canonical,
+self-contained source for building a plugin against this contract — including how isolation works
+and how to port an existing plugin.
 
-## Dev setup (build-out)
+## Dev setup
 
-During the extraction build-out, `3lc` is sourced from a local monorepo checkout and the host
-editable-sources this package — both via clearly-marked **dev-only** `[tool.uv.sources]` (here and
-in the host). These revert to index/version pins before any real publish.
+During development, `3lc` is sourced from a local checkout via a clearly-marked **dev-only**
+`[tool.uv.sources]`. This reverts to an index/version pin before any real publish.
 
 ```bash
 uv sync                 # installs the SDK + dev tools (ruff, mypy, pytest)
@@ -60,8 +58,8 @@ uv run mypy src/
 uv run pytest
 ```
 
-## Conventions (inherited from the monorepo)
+## Conventions
 
 Python 3.10+, uv, Hatchling, Litestar, Ruff (line-length 120), mypy `--strict` clean (no
-`# type: ignore`, no `Any` used to silence the checker — see the monorepo CLAUDE.md for the full
-rule). Google-style docstrings. Copyright header on new files.
+`# type: ignore`, no `Any` used to silence the checker). Google-style docstrings. Copyright header
+on new files.
