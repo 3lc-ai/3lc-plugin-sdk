@@ -1,0 +1,10 @@
+{
+  "name": "3lc-plugin-sdk-docs",
+  "private": true,
+  "description": "Node toolchain for the docs build: TypeDoc feeds sphinx-js the JS_CONTRACT (.d.ts) surface.",
+  "devDependencies": {
+    "tsx": "4.15.8",
+    "typedoc": "0.25.13",
+    "typescript": "5.4.5"
+  }
+}

@@ -5,3 +5,5 @@
 sphinx>=8.0
 furo                # clean, zero-config theme
 myst-parser>=4.0    # render the Markdown guides (docs/*.md) alongside autodoc
+sphinx-js>=5.0      # document the browser contract (.d.ts) via TypeDoc — needs
+                    # the Node toolchain in docs/package.json (npm --prefix docs ci)

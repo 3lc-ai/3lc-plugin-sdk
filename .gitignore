@@ -17,6 +17,7 @@ venv/
 
 # Docs build output
 docs/_build/
+docs/node_modules/
 
 # Editors / OS
 .vscode/

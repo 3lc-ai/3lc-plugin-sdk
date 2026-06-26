@@ -35,6 +35,18 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
+      # sphinx-js drives TypeDoc to document the browser contract (.d.ts);
+      # both are Node tools pinned in docs/package.json.
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install docs Node toolchain (TypeDoc)
+        run: npm --prefix docs ci
+
       # Install the package + deps so autodoc can import tlc_plugin_sdk,
       # then overlay the docs toolchain and build.
       - name: Install dependencies

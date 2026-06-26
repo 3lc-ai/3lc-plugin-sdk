@@ -37,7 +37,17 @@ extensions = [
     "sphinx.ext.intersphinx",  # cross-link to Python's stdlib docs
     "sphinx.ext.viewcode",  # [source] links next to documented objects
     "myst_parser",  # author guides are Markdown
+    "sphinx_js",  # document the browser contract (.d.ts) via TypeDoc
 ]
+
+# -- sphinx-js (browser contract) ---------------------------------------------
+# The JS_CONTRACT surface lives in a TypeScript declaration file. sphinx-js
+# drives TypeDoc (docs/node_modules, see docs/package.json) to extract it, then
+# renders `.. js:autointerface::` entries in api.md. TypeDoc must be installed
+# (`npm --prefix docs install`) before the Sphinx build.
+js_language = "typescript"
+js_source_path = "../src/tlc_plugin_sdk/contract/plugin-api.d.ts"
+root_for_relative_js_paths = "../src/tlc_plugin_sdk/contract"
 
 # .md -> MyST, .rst -> reStructuredText (the eval-rst blocks in api.md).
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
@@ -54,7 +64,7 @@ myst_heading_anchors = 3
 suppress_warnings = ["myst.xref_missing"]
 
 templates_path: list[str] = []
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "node_modules"]
 
 # -- Autodoc ------------------------------------------------------------------
 autodoc_default_options = {

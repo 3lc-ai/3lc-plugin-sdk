@@ -31,6 +31,19 @@ The `.d.ts` ships in the wheel at
 `<site-packages>/tlc_plugin_sdk/contract/plugin-api.d.ts`; a plain-JS `ui.html` references
 it with `/// <reference types="3lc-plugin-sdk/contract/plugin-api" />`.
 
+## The browser contract (`JS_CONTRACT`)
+
+The browser surface a plugin's `ui.html` programs against — `PLUGIN_API`, `PluginJobs`,
+and the `TlcData` helper — is declared in `plugin-api.d.ts`, the source of truth for
+`JS_CONTRACT`. Every interface in that file is documented below (generated via TypeDoc).
+
+```{eval-rst}
+.. automodule documents every exported symbol in the file, so new contract
+   interfaces appear here automatically. The module key is the source filename
+   with TypeDoc's trailing ``.ts`` stripped: ``plugin-api.d.ts`` -> ``plugin-api.d``.
+.. js:automodule:: plugin-api.d
+```
+
 ## The worker
 
 ```{eval-rst}

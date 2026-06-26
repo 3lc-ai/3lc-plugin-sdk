@@ -47,7 +47,7 @@
  * Compute-service method bag, exposed as `PLUGIN_API.compute`.
  * Currently only `getHealth()` (GET /health).
  */
-interface TlcComputeService {
+export interface TlcComputeService {
   getHealth(): Promise<object>;
 }
 
@@ -56,7 +56,7 @@ interface TlcComputeService {
  * All methods go through `authFetch` against the object-service URL; object URLs
  * are encoded via `TlcApi.encodeObjectUrl`.
  */
-interface TlcObjectService {
+export interface TlcObjectService {
   getStatus(): Promise<object>;
   getTableIndex(): Promise<object>;
   getRunIndex(): Promise<object>;
@@ -68,7 +68,7 @@ interface TlcObjectService {
 }
 
 /** Custom non-standard fetch options layered on top of the standard `RequestInit`. */
-interface PluginFetchOptions extends RequestInit {
+export interface PluginFetchOptions extends RequestInit {
   /**
    * Abort the request after this many milliseconds (default 10000). Custom,
    * non-standard option — deleted before the underlying `fetch()` call. Ignored
@@ -79,7 +79,7 @@ interface PluginFetchOptions extends RequestInit {
 
 // ── TlcData (cached project/table/run indexing tables) ─────────────────────────
 
-interface TlcDataProject {
+export interface TlcDataProject {
   project_name: string;
   table_count: number;
   run_count: number;
@@ -87,7 +87,7 @@ interface TlcDataProject {
   last_modified: number;
 }
 
-interface TlcDataTable {
+export interface TlcDataTable {
   url: string;
   project_name: string;
   dataset_name: string;
@@ -100,7 +100,7 @@ interface TlcDataTable {
   input_table_urls: string[];
 }
 
-interface TlcDataRun {
+export interface TlcDataRun {
   url: string;
   project_name: string;
   run_name: string;
@@ -114,7 +114,7 @@ interface TlcDataRun {
   is_url_writable: boolean;
 }
 
-interface TlcDataSummary {
+export interface TlcDataSummary {
   project_count: number;
   table_count: number;
   run_count: number;
@@ -124,7 +124,7 @@ interface TlcDataSummary {
  * The global `TlcData` helper (cached indexing tables). Referenced from
  * `PLUGIN_API.data`. Implemented by the frontend (data-helpers.js).
  */
-interface TlcData {
+export interface TlcData {
   /** Fetch and cache both indexing tables; dedupes concurrent callers; refetches when stale. */
   load(): Promise<void>;
   /** Mark the cache stale so the next `load()` refetches; old data stays readable until replaced. */
@@ -163,7 +163,7 @@ interface TlcData {
  *     convenience, may be swapped/removed without a contract bump. A plugin that
  *     needs one should be prepared to vendor its own.
  */
-interface PluginLibs {
+export interface PluginLibs {
   /** socket.io client (STABLE). */
   io: any | null;
   Chart: any | null;
@@ -175,7 +175,7 @@ interface PluginLibs {
 // ── PLUGIN_API — the single host -> fragment bridge ────────────────────────────
 
 /** Launch context: what the user launched the plugin against. */
-interface PluginContext {
+export interface PluginContext {
   /** Selected resource kind ('run','table',...) or `null` when launched bare. */
   resourceType: string | null;
   /** Selected 3LC object URLs (default `[]`). */
@@ -189,7 +189,7 @@ interface PluginContext {
  * `window.PLUGIN_API` when it mounts a plugin fragment; a fragment should reach
  * for nothing else. Many plugins alias it: `var API = window.PLUGIN_API`.
  */
-interface PluginApi {
+export interface PluginApi {
   /** Launch context (resource type/urls + project). */
   context: PluginContext;
 
@@ -258,7 +258,7 @@ interface PluginApi {
 // ── window.PluginJobs — SDK-injected job-tracker client ────────────────────────
 
 /** The opaque generic job object delivered to `PluginJobs` handlers. */
-interface PluginJobUpdate {
+export interface PluginJobUpdate {
   /** 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'. */
   status?: string;
   /** Job id. */
@@ -272,7 +272,7 @@ interface PluginJobUpdate {
   [key: string]: any;
 }
 
-interface PluginJobHandlers {
+export interface PluginJobHandlers {
   /** Fires on every `job_update`. */
   onUpdate?: (job: PluginJobUpdate) => void;
   /** Fires on terminal `completed` / `cancelled`. */
@@ -282,7 +282,7 @@ interface PluginJobHandlers {
 }
 
 /** The parsed response of the generic `POST /api/plugins/{id}/run` route. */
-interface PluginRunResponse {
+export interface PluginRunResponse {
   job_id?: string;
   status?: string;
   namespace?: string;
@@ -295,7 +295,7 @@ interface PluginRunResponse {
  * plugin's fragment via `inject_scripts(raw, job_tracker_script())`. NOT part of
  * the host `PLUGIN_API` bridge; it is layered on top of it.
  */
-interface PluginJobsApi {
+export interface PluginJobsApi {
   /**
    * Start a job and track it on the generic `job_update` channel. Pre-subscribes
    * on the default namespace `'/' + pluginId` (corrected to `resp.namespace` if it
@@ -338,7 +338,7 @@ interface PluginJobsApi {
  * `TlcApi` — the frontend API client (api-client.js). Plugins normally reach it
  * through `PLUGIN_API` rather than directly, but it is an ambient global.
  */
-interface TlcApi {
+export interface TlcApi {
   computeService: TlcComputeService;
   objectService: TlcObjectService;
   authFetch(url: string, options?: PluginFetchOptions): Promise<Response>;
