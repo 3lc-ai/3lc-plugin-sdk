@@ -73,7 +73,7 @@ is no `get_active_jobs()` / `cancel_job()` on the contract — see
 ### 1. Create the plugin directory
 
 ```
-compute-service/src/tlc_compute/plugins/my_plugin/
+tlc_plugin_my_plugin/          # the default shape: a standalone venv-isolated package
 ├── plugin.toml    # Manifest — ALL metadata (id, name, ui, runtime)
 ├── __init__.py    # Plugin object — behavior only, no metadata, no register()
 ├── ui.html        # UI fragment (HTML + CSS + JS)
@@ -81,6 +81,12 @@ compute-service/src/tlc_compute/plugins/my_plugin/
 ├── compute.py     # Pure compute lifted by run_job(ctx) (optional)
 └── ...            # All plugin code lives here
 ```
+
+> **In-tree host exception.** The two private, in-tree plugins shipped inside the
+> compute-service host package (`run-insights`, `table-insights`) instead live under
+> `compute-service/src/tlc_compute/plugins/my_plugin/` with `isolation = "host"` and an
+> entrypoint like `tlc_compute.plugins.my_plugin:MyPlugin`. New open plugins should use the
+> `venv` + `tlc_plugin_<name>` shape shown above, not this host form.
 
 ### 2. Write the manifest
 
@@ -121,13 +127,20 @@ quick_action = false                # Show in dashboard quick actions?
 # group_icon_svg = '<svg ...><rect x="2" y="2" width="12" height="12" rx="2"/></svg>'
 
 [runtime]
-isolation = "host"                  # host (in-process) | venv (isolated worker)
-entrypoint = "tlc_compute.plugins.my_plugin:MyPlugin"  # "pkg.module:ClassName"
+isolation = "venv"                  # venv (isolated worker, the default) | host (in-process)
+entrypoint = "tlc_plugin_my_plugin:MyPlugin"  # "pkg.module:ClassName"
 requires_gpu = false                # drives GPU vs CPU classification
-# Optional SocketIO namespace for real-time updates (host registers it at startup
-# so a UI can connect; declaring it does NOT mean emitting custom events):
+provision_extra = "my-plugin"       # REQUIRED for venv: host runs `uv sync --extra <this>`
+# Optional SocketIO namespace for real-time updates. Defaults to "/<plugin-id>";
+# declare it only to override (the host registers it at startup so a UI can connect;
+# declaring it does NOT mean emitting custom events):
 # socketio_namespace = "/my-plugin"
 ```
+
+`runtime.provision_extra` is **required for every `venv` plugin**: it names the extra the
+host installs with `uv sync --extra <that-value>`. For first-party plugins this is a
+per-plugin extra in the `3lc-compute-plugins` umbrella `pyproject.toml`. (Host plugins don't
+declare it — their deps are a subset of the service.)
 
 **`isolation` — where the plugin runs (the *only* placement knob).** A plugin
 declares `isolation` and `requires_gpu`; it never picks a queue or names a lane.
@@ -306,7 +319,7 @@ startup.
 > var API = window.PLUGIN_API;   // now typed
 > ```
 >
-> That file is the source of truth for **`JS_CONTRACT` (0.2)** — the browser-side contract.
+> That file is the source of truth for **`JS_CONTRACT` (0.1)** — the browser-side contract.
 > The Hub frontend (`3lc-hub-frontend/frontend/static/js/plugin-loader.js`, `mountPlugin`)
 > **implements** `PLUGIN_API`; `window.PluginJobs` **ships from this package** (it is layered
 > on top of the bridge, not part of it). See "Two version axes" below.
@@ -473,10 +486,11 @@ in-process (`host`) or in a worker (`venv`); it only ever touches `ctx`.
 
 ```toml
 [runtime]
-isolation = "host"
-entrypoint = "tlc_compute.plugins.my_gpu_plugin:MyGpuPlugin"
+isolation = "venv"
+entrypoint = "tlc_plugin_my_gpu_plugin:MyGpuPlugin"
 requires_gpu = true                 # → routed through the shared GPU queue (1 at a time)
-socketio_namespace = "/my-plugin"   # optional — only if the UI wants live updates
+provision_extra = "my-gpu-plugin"   # venv deps installed via `uv sync --extra <this>`
+# socketio_namespace defaults to "/my-gpu-plugin"; declare only to override
 ```
 
 GPU jobs are serialized — only one runs at a time across every GPU plugin (YOLO, SAM3,
@@ -548,7 +562,8 @@ metrics).
 (see `importer/__init__.py`). It starts a job and tracks it over the generic channel:
 
 ```javascript
-// Declare socketio_namespace in plugin.toml so the host registers the channel.
+// The host registers the namespace automatically (default "/<plugin-id>");
+// declare socketio_namespace in plugin.toml only to override it.
 PluginJobs.run('my-plugin', { table_url: url }, {
   onUpdate: function (job) {
     // generic schema: job.status, job.progress.percent/label, job.metrics[]
@@ -626,17 +641,17 @@ color: var(--accent);           /* Accent color (#2a4a61) */
 
 | Plugin ID | display_mode | Section | isolation | Description |
 |---|---|---|---|---|
-| `importer` | sidebar | Data Ops | host | Import data (YOLO, COCO, Folder, CSV, Unlabeled) |
-| `exporter` | sidebar | Data Ops | host | Export tables to CSV, XLSX, YOLO, COCO |
-| `splitter` | sidebar | Data Ops | host | Split tables into train/val/test sets |
-| `merger` | sidebar | Data Ops | host | Merge 2 tables by column join |
-| `image-metrics` | sidebar | Data Ops | host (GPU) | Image quality metrics (brightness, sharpness, noise, etc.) |
+| `importer` | sidebar | Data Ops | **venv** | Import data (YOLO, COCO, Folder, CSV, Unlabeled) |
+| `exporter` | sidebar | Data Ops | **venv** | Export tables to CSV, XLSX, YOLO, COCO |
+| `splitter` | sidebar | Data Ops | **venv** | Split tables into train/val/test sets |
+| `merger` | sidebar | Data Ops | **venv** | Merge 2 tables by column join |
+| `image-metrics` | sidebar | Data Ops | **venv** (GPU) | Image quality metrics (brightness, sharpness, noise, etc.) |
 | `yolo` | sidebar | AI Tools | **venv** (GPU) | Ultralytics YOLO training + metrics collection |
 | `sam3` | sidebar | AI Tools | **venv** (GPU) | Auto-labeling with SAM3/GroundingDINO |
 | `timm` | sidebar | AI Tools | **venv** (GPU) | Image classification with timm models |
-| `run-insights` | action | Analysis | host | Run statistics, health scores, per-class metrics |
-| `table-insights` | action | Analysis | host | GT-only data quality analysis (bbox sizes, balance, etc.) |
-| `table-statistics` | hidden | Analysis | host | Per-column stats & image thumbnails (API-only) |
+| `table-statistics` | hidden | Analysis | **venv** | Per-column stats & image thumbnails (API-only) |
+| `run-insights` | action | Analysis | host (in-tree) | Run statistics, health scores, per-class metrics |
+| `table-insights` | action | Analysis | host (in-tree) | GT-only data quality analysis (bbox sizes, balance, etc.) |
 
 ---
 
@@ -767,9 +782,9 @@ via the `3lc-plugin-sdk` dependency. The SDK exposes three constants in `tlc_plu
 
 | Constant | Covers | Value |
 |----------|--------|-------|
-| `SDK_CONTRACT_VERSION` | the wheel/SemVer — the actual dependency *pin* (`3lc-plugin-sdk>=X,<Y`) | = package version (`0.2.0`) |
-| `PY_CONTRACT` | the Python surface: `ComputePlugin` / `JobContext` / `shared.*` | `0.2` |
-| `JS_CONTRACT` | the browser surface: `PLUGIN_API` / `PluginJobs` / `TlcData` (see `plugin-api.d.ts`) | `0.2` |
+| `SDK_CONTRACT_VERSION` | the wheel/SemVer — the actual dependency *pin* (`3lc-plugin-sdk>=X,<Y`) | = package version (`0.1.0`) |
+| `PY_CONTRACT` | the Python surface: `ComputePlugin` / `JobContext` / `shared.*` | `0.1` |
+| `JS_CONTRACT` | the browser surface: `PLUGIN_API` / `PluginJobs` / `TlcData` (see `plugin-api.d.ts`) | `0.1` |
 
 `PY_CONTRACT` and `JS_CONTRACT` are **feature-detection markers** that increment *independently*
 as features are added to one side without the other. Both are always `<=` the package version (a
@@ -945,9 +960,10 @@ This section is a reference for Claude Code when asked to create a new plugin.
 - See `importer/__init__.py` and `sam3/runner.py` for working examples
 
 **SocketIO** (if real-time updates needed):
-- Declare `socketio_namespace = "/my-plugin"` in the manifest's `[runtime]` — the host
-  auto-registers it at startup (no shared file changes). That alone lets the UI subscribe
-  to the generic `job_update` channel; you do **not** need to emit anything custom.
+- `socketio_namespace` is optional — it defaults to `/<plugin-id>`, which the host
+  auto-registers at startup (no shared file changes); declare it in the manifest's
+  `[runtime]` only to override that default. Either way the UI can subscribe to the generic
+  `job_update` channel; you do **not** need to emit anything custom.
 - Prefer the `window.PluginJobs` client over a hand-rolled socket — see
   [Real-Time Updates](#real-time-updates-windowpluginjobs--custom-events).
 - Use `ctx.emit(name, payload)` only for telemetry the generic schema can't express
