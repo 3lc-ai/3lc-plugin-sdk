@@ -49,6 +49,27 @@ js_language = "typescript"
 js_source_path = "../src/tlc_plugin_sdk/contract/plugin-api.d.ts"
 root_for_relative_js_paths = "../src/tlc_plugin_sdk/contract"
 
+
+def ts_type_xref_formatter(config: object, xref: object) -> str:
+    """Link type references to their definitions.
+
+    sphinx-js renders type names (a return type, a property type) as plain text
+    by default. When a reference resolves to a documented interface in this same
+    contract, emit the matching ``:js:…:`` cross-reference role so e.g.
+    ``getTables(): TlcDataTable[]`` links straight to the ``TlcDataTable``
+    definition. Intrinsics (``string``, ``object``) and unresolved references
+    fall back to bare text. The nested role is re-parsed by sphinx-js's
+    ``sphinx_js_type`` role, so it renders as a real link inside the type span.
+    """
+    from sphinx_js.ir import TypeXRefInternal
+
+    name: str = xref.name  # type: ignore[attr-defined]
+    if isinstance(xref, TypeXRefInternal):
+        kind = (xref.kind or "").lower()
+        if kind in ("interface", "class", "typealias"):
+            return f":js:{kind}:`{name}`"
+    return name
+
 # .md -> MyST, .rst -> reStructuredText (the eval-rst blocks in api.md).
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
@@ -61,7 +82,12 @@ myst_heading_anchors = 3
 # don't exist in this repo, so don't let `-W` turn the dangling links into a build
 # failure. This is scoped to MyST link resolution only — autodoc/reference errors
 # stay fatal. Remove once the guide's cross-doc links are repointed or inlined.
-suppress_warnings = ["myst.xref_missing"]
+suppress_warnings = [
+    "myst.xref_missing",
+    # ts_type_xref_formatter is a function, so Sphinx's config cache can't
+    # pickle it. Harmless — it just means the config isn't cached between runs.
+    "config.cache",
+]
 
 templates_path: list[str] = []
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "node_modules"]
