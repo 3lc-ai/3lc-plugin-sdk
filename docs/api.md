@@ -35,7 +35,7 @@ it with `/// <reference types="3lc-plugin-sdk/contract/plugin-api" />`.
 
 The browser surface a plugin's `ui.html` programs against — `PLUGIN_API`, `PluginJobs`,
 and the `TlcData` helper — is declared in `plugin-api.d.ts`, the source of truth for
-`JS_CONTRACT`. Every interface in that file is documented below (generated via TypeDoc).
+`JS_CONTRACT`.
 
 ```{eval-rst}
 .. automodule documents every exported symbol in the file, so new contract
