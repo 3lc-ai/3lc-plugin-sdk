@@ -4,7 +4,7 @@ name: docs
 # One-time setup: repo Settings -> Pages -> Source = "GitHub Actions".
 on:
   push:
-    branches: [develop]
+    branches: [main]
   workflow_dispatch:
 
 # Least-privilege token for the Pages deploy.
