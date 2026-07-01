@@ -16,7 +16,8 @@ name: Release
 #   Variables:
 #     CLOUDREPO_PUBLISH_URL - upload endpoint. The SDK is open + beta, so target the PUBLIC
 #                             prerelease repo, mirroring 3lc-compute:
-#                             https://pypi.3lc.ai/public/repositories/prereleases-public/
+#                             https://pypi.3lc.ai/repositories/prereleases-public
+#                             (NO "/public/": that path is the anonymous READ-only mount; uv publish POSTs are rejected.)
 #                             (confirm the exact UPLOAD url with whoever owns the CloudRepo —
 #                              the read mount and the upload endpoint can differ.)
 # Optionally add required reviewers on the "release" environment to gate publishes.
