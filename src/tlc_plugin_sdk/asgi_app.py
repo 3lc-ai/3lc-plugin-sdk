@@ -2,31 +2,29 @@
 # SPDX-License-Identifier: Apache-2.0
 """Build a plugin's HTTP surface as a Litestar ASGI app.
 
-This is the single route-authoring pattern for Layer B (transport unification): a
-plugin exposes its custom routes as relative Litestar route handlers via
-:meth:`ComputePlugin.get_route_handlers`, and the **same** handlers are served two
-ways from the **same** builder:
+This is the single route-authoring pattern: a plugin exposes its custom routes as
+relative Litestar route handlers via :meth:`ComputePlugin.get_route_handlers`, and
+the **same** handlers are served two ways from the **same** builder:
 
 - **host (in-process):** the compute service builds the app once per plugin
-  instance and invokes it directly through the ASGI interface (no socket) — see
-  ``plugins/endpoint.py``;
-- **venv (out-of-process):** the worker (``plugin_sdk.worker``) serves the app with
-  uvicorn on a Unix socket and the host reverse-proxies to it.
+  instance and invokes it directly through the ASGI interface (no socket);
+- **venv (out-of-process):** the worker (``tlc_plugin_sdk.worker``) serves the app
+  with uvicorn on a Unix socket and the host reverse-proxies to it.
 
 Because both modes serve the identical app, a plugin's routes get a real router,
 request validation, multipart, and binary/streaming responses in **either** mode,
 with no host/venv divergence. Litestar runs ``def`` handlers in a threadpool, so a
-synchronous, CPU-bound custom route (e.g. SAM3's preview inference) does not block
-the event loop.
+synchronous, CPU-bound custom route (e.g. preview inference) does not block the
+event loop.
 
 The app also mounts the host-reserved generic routes (``/health``, ``/ui``,
 ``/compute``) so the worker can answer them over the socket; for the in-process host
 app these are harmless (the host serves ``/ui``/``/compute`` from its own reserved
 param routes and never forwards them here).
 
-Litestar is a base dependency of ``tlc-compute`` (the SDK contract), but it is
-imported **here**, not in the import-light :mod:`tlc_plugin_sdk` package
-surface — so ``import tlc_plugin_sdk`` stays cheap.
+Litestar is a base dependency of this SDK, but it is imported **here**, not in
+the import-light :mod:`tlc_plugin_sdk` package surface — so
+``import tlc_plugin_sdk`` stays cheap.
 """
 
 from __future__ import annotations

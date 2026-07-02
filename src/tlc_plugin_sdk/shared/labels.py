@@ -141,7 +141,7 @@ def get_class_name_lookup(table: Any, column: str | None = None, *, path: str | 
 
     Keys include both the raw map key (``"1.0"``) and its integer form
     (``"1"``), so callers can index with whichever flavor their data carries.
-    This is the shape the run_insights statistics pipeline consumes.
+    This is the shape the insights statistics pipeline consumes.
 
     Args:
         table: A loaded ``tlc.Table``.

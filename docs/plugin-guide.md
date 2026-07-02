@@ -83,11 +83,10 @@ tlc_plugin_my_plugin/          # the default shape: a standalone venv-isolated p
 └── ...            # All plugin code lives here
 ```
 
-> **In-tree host exception.** The two private, in-tree plugins shipped inside the
-> compute-service host package (`run-insights`, `table-insights`) instead live under
-> `compute-service/src/tlc_compute/plugins/my_plugin/` with `isolation = "host"` and an
-> entrypoint like `tlc_compute.plugins.my_plugin:MyPlugin`. New open plugins should use the
-> `venv` + `tlc_plugin_<name>` shape shown above, not this host form.
+> **In-tree host exception.** A host may ship plugins inside its own package with
+> `isolation = "host"` and a host-internal entrypoint; those live in the host's source tree
+> and follow its layout. New plugins should use the `venv` + `tlc_plugin_<name>` shape shown
+> above, not the host form.
 
 ### 2. Write the manifest
 
@@ -156,10 +155,6 @@ the same code runs in-process or in a worker. `requires_gpu = true` routes the j
 through the shared GPU queue (one GPU job at a time, across every plugin);
 `requires_gpu = false` jobs run on the CPU queue. Both are host-owned; the plugin
 never touches a queue.
-
-> **Legacy:** `socketio_runner_module` / `socketio_runner_fn` are still read but
-> are vestigial — they only seeded a runner's initial state under the old job
-> machinery. A plugin migrated to `run_job(ctx)` declares only `socketio_namespace`.
 
 ### 3. Implement the plugin object
 
@@ -292,7 +287,7 @@ The UI fragment is a self-contained `<style>` + `<div>` + `<script>` block. It h
 
 ### 5. Discovery
 
-There is **nothing to register**. On startup, `discover.py` scans the plugin directories
+There is **nothing to register**. On startup, the host scans the plugin directories
 for manifests (no imports), builds a card from each, and gates compatibility against the
 service version. When a host plugin is actually needed, the host imports the module named in
 the manifest's `runtime.entrypoint` and instantiates the class, stamping the display
@@ -315,14 +310,14 @@ startup.
 > into editor type-checking without a build step:
 >
 > ```javascript
-> /// <reference types="3lc-plugin-sdk/contract/plugin-api" />
+> /// <reference types="3lc-compute-plugin-sdk/contract/plugin-api" />
 > var API = window.PLUGIN_API;   // now typed
 > ```
 >
 > That file is the source of truth for **`JS_CONTRACT` (0.1)** — the browser-side contract.
-> The Hub frontend (`3lc-hub-frontend/frontend/static/js/plugin-loader.js`, `mountPlugin`)
-> **implements** `PLUGIN_API`; `window.PluginJobs` **ships from this package** (it is layered
-> on top of the bridge, not part of it). See "Two version axes" below.
+> The 3LC Hub frontend **implements** `PLUGIN_API` when it mounts a fragment;
+> `window.PluginJobs` **ships from this package** (it is layered on top of the bridge, not
+> part of it). See "Two version axes" below.
 
 ### How a fragment reaches the browser
 
@@ -331,7 +326,7 @@ data fetching client-side — it holds zero plugin knowledge and never proxies p
 The mount lifecycle:
 
 ```
-Browser (3lc-hub-frontend, vanilla JS)            Compute service (:5020)
+Browser (3LC Hub frontend, vanilla JS)              Compute service (:5020)
   │  user opens /plugin/{id}  (Flask route → plugin_host.html)
   ├─ TlcPlugins.mountPlugin(id, el, ctx) ───────▶  GET /api/plugins/{id}/ui  → HTML fragment
   │     1. innerHTML = fragment
@@ -441,9 +436,7 @@ endpoints, streaming), return **relative Litestar route handlers** from `get_rou
 bare `@get`/`@post` handlers with **relative** paths, no `Controller` and no `/api/plugins`
 prefix. The host serves them through the plugin's own per-plugin app, behind the generic
 `/api/plugins/{id}/{subpath}` catch-all — in-process for `host` plugins, reverse-proxied to the
-worker for `venv` plugins. (Pre-transport-unification plugins mounted a `Controller` at the
-absolute path `/api/plugins/{id}`, which shadowed the generic routes and forced an explicit
-`@get("/ui")`. That is gone — there is **no** `handle()` and no shadowing caveat.)
+worker for `venv` plugins.
 
 ```python
 from typing import Any
@@ -470,7 +463,8 @@ def get_route_handlers() -> list[BaseRouteHandler]:
 These resolve at `GET /api/plugins/my-plugin/status` and `POST /api/plugins/my-plugin/analyze`.
 The plugin class's `get_route_handlers()` delegates to this module-level function (often a
 `routes.py`); a lazy import inside it avoids import cycles with the package `__init__`. See
-`plugins/image_metrics/routes.py` (simplest) and `plugins/sam3/routes.py`.
+`tlc_plugin_image_metrics/routes.py` in the `3lc-compute-plugins` repo for the simplest
+real example.
 
 ---
 
@@ -650,8 +644,8 @@ color: var(--accent);           /* Accent color (#2a4a61) */
 | `sam3` | sidebar | AI Tools | **venv** (GPU) | Auto-labeling with SAM3/GroundingDINO |
 | `timm` | sidebar | AI Tools | **venv** (GPU) | Image classification with timm models |
 | `table-statistics` | hidden | Analysis | **venv** | Per-column stats & image thumbnails (API-only) |
-| `run-insights` | action | Analysis | host (in-tree) | Run statistics, health scores, per-class metrics |
-| `table-insights` | action | Analysis | host (in-tree) | GT-only data quality analysis (bbox sizes, balance, etc.) |
+| `run-insights` | action | Analysis | host (ships with the service) | Run statistics, health scores, per-class metrics |
+| `table-insights` | action | Analysis | host (ships with the service) | GT-only data quality analysis (bbox sizes, balance, etc.) |
 
 ---
 
@@ -814,9 +808,9 @@ All version fields live at the top level of the manifest (`plugin.toml`, or
 
 ```toml
 version = "1.0.0"               # Plugin's own version
-min_service_version = "0.2.0"   # Minimum compute service version required
+min_service_version = "0.1.0"   # Minimum compute service version required
 max_service_version = ""        # Maximum service version (empty = no upper bound)
-min_frontend_version = "0.2.0"  # Minimum frontend version for this plugin's UI
+min_frontend_version = "0.1.0"  # Minimum frontend version for this plugin's UI
 ```
 
 ### When to Bump Versions
@@ -834,15 +828,15 @@ min_frontend_version = "0.2.0"  # Minimum frontend version for this plugin's UI
 - **Incompatible** plugins are still loaded but **disabled** — visible in the sidebar with an "update" badge, grayed out, not clickable. Users can see what's available but can't use it until the service is updated.
 - The Settings → Plugins page shows an "Incompatible" badge with the reason.
 
-### Future: Plugin Repository
+### Plugin catalog fields
 
-Plugins have placeholder fields for a future remote update system:
-- `update_available`: Latest version from repository (empty until repo is built)
-- `changelog_url`: Link to changelog
-- `upgrade_required`: If True, plugin must be upgraded to continue
-- `repository_url`: Where to fetch updates
+The manifest reserves fields the host's plugin catalog uses for update signaling:
+- `update_available`: latest version listed in the host's configured catalog
+- `changelog_url`: link to a changelog
+- `upgrade_required`: if true, the plugin must be upgraded to continue
+- `repository_url`: where the plugin's source lives
 
-These are empty today but included in the manifest schema for forward compatibility.
+A host without a configured catalog leaves them empty.
 
 ## Checklist
 
@@ -866,129 +860,8 @@ These are empty today but included in the manifest schema for forward compatibil
 
 ---
 
-## Guide for Claude: Building New Plugins
+## For AI coding agents
 
-This section is a reference for Claude Code when asked to create a new plugin.
-
-### Before You Start
-
-1. Read this entire guide first.
-2. Read an existing plugin that's closest to what you're building:
-   - **Form → execute → result**: Look at `exporter/` or `importer/`
-   - **Config + GPU job + SocketIO**: Look at `sam3/`, `yolo/`, or `timm/`
-   - **Inline data display (no standalone page)**: Look at `table_statistics/`
-   - **Action on selected resources**: Look at `merger/` or `run_insights/`
-3. Read `tlc_plugin_sdk/contract.py` — `ComputePlugin` is an `abc.ABC` with two abstract
-   methods (`get_ui_fragment()`, `compute()`) and an `id` attribute the host stamps from
-   the manifest. The optional hooks (`run_job`, `initialise_runtime`, `shutdown_runtime`,
-   `get_route_handlers`) ship as no-op defaults, so you override only what you
-   need and the host calls each directly. There is no `register()`, no `handle()`, and **no**
-   `get_active_jobs`/`cancel_job` — the host owns job listing and cancellation.
-4. Read `plugins/exporter/plugin.toml` and `plugins/exporter/__init__.py` — the canonical
-   manifest + `ComputePlugin` subclass exemplar.
-5. Read `plugins/discover.py` to see how manifests are scanned and cards are built.
-
-### Step-by-Step
-
-1. **Create directory**: `plugins/<plugin_name>/` (snake_case)
-2. **Create `plugin.toml`** (the manifest) with all metadata: top-level identity/version,
-   `[ui]`, and `[runtime]` (including `entrypoint = "pkg.module:ClassName"`). Copy the shape
-   from `exporter/plugin.toml`.
-3. **Create `__init__.py`** with a `ComputePlugin` subclass:
-   - Subclass `ComputePlugin` (from `tlc_plugin_sdk`); no metadata attributes, no `register()`
-   - `get_ui_fragment()` reading from `ui.html`
-   - `get_route_handlers()` returning your controller class (optional)
-   - Any optional hooks you need (`run_job` for long-running tasks,
-     `initialise_runtime`, `shutdown_runtime`) — override the base's no-op defaults
-4. **Create `ui.html`** following the UI structure above
-5. **Create `routes.py`** if you need custom endpoints (e.g. config CRUD)
-6. **If you have a long-running task**: implement `run_job(ctx)` (see
-   [Long-Running Jobs](#long-running-jobs-run_jobctx)) and set `requires_gpu` in
-   `[runtime]`. Reference: `image_metrics/`, `yolo/`, `sam3/`, `timm/`, `importer/`.
-
-### Code Patterns to Follow
-
-**Config Store** (if plugin has saved configurations):
-- Use the shared `PluginConfigStore` from `tlc_plugin_sdk.shared.config_store`
-  (generic over your config dataclass; JSON file persistence under the plugin's state dir)
-- Pair it with `config_ui_script()` from `tlc_plugin_sdk.shared.config_ui` for the config bar
-  (inject via `inject_scripts()`). See `plugins/sam3/` and `plugins/timm/`.
-
-**Long-running jobs** (training, inference, multi-step import):
-- Implement `run_job(ctx)` — the host owns the queue, GPU/CPU slot, progress fan-out,
-  listing, and cancellation (see [Long-Running Jobs](#long-running-jobs-run_jobctx)).
-- Drive the generic Queue & Progress panel via `ctx.progress`/`ctx.metric`/`ctx.result`;
-  poll `ctx.cancelled` at checkpoints. The same `run_job` runs in `host` or `venv` mode.
-- Reference implementations: `image_metrics/` (simplest), `merger/` / `splitter/` (CPU),
-  `yolo/`, `sam3/`, `timm/`, `importer/`. Every long-running plugin uses `run_job(ctx)` now.
-  Do **not** hand-roll a queue, `GpuJob`, `get_active_jobs`, or job-schema translation — all of
-  that is host-provided. (The old `AsyncJobStore` CPU pattern is gone; `merger`/`splitter` were
-  migrated to `run_job`.)
-
-**Routes** (custom REST):
-- Follow `sam3/routes.py` or `timm/routes.py`: a module-level `get_route_handlers()` returning
-  bare `@get`/`@post` handlers with **relative** paths (no `Controller`, no `/api/plugins` prefix,
-  `sync_to_thread=True` for blocking work). The plugin class delegates to it.
-- They resolve under `/api/plugins/<plugin-name>/...` via the host's per-plugin app + catch-all.
-  Do **not** mount a `Controller` at an absolute path and do **not** add a `@get("/ui")` — there
-  is no shadowing to work around anymore.
-- CRUD for configs: relative `GET /configs`, `POST /configs`, `GET /configs/{id}`, `POST /configs/{id}/delete`
-- Do **not** add `GET /queue` / `POST /cancel/{id}` / a job-start route — long-running work
-  goes through the generic `POST /api/plugins/{id}/run`, `GET /api/plugins/jobs`, and
-  `POST /api/plugins/jobs/{job_id}/cancel`. Custom controllers carry only genuinely
-  plugin-specific routes (config CRUD, metadata lookups, column detection, …).
-
-**Error response convention:**
-- Pre-validation errors (bad input): return `{"error": "description"}`
-- Execution results (job completed): return `{"success": true/false, "message": "..."}`
-- Not found: raise `HTTPException(status_code=404)`
-
-**URL Aliases** (if plugin creates tables from image folders):
-- Use shared utilities: `from tlc_plugin_sdk.shared.aliases import register_alias`
-- Call `register_alias(project_name, image_folder, alias_token)` after table creation
-- Shared UI component: `from tlc_plugin_sdk.shared.alias_ui import alias_ui_script`
-- Inject into the fragment with `inject_scripts()`, never `str.replace`:
-  `from tlc_plugin_sdk.shared.ui_inject import inject_scripts` then
-  `self._ui_cache = inject_scripts(raw, alias_ui_script())`. `inject_scripts(html, *scripts)`
-  appends into the fragment's first **real** inline `<script>` (skipping comments / `src=`)
-  and raises if there is none — the old `raw.replace("<script>", …)` matched a `<script>`
-  inside a comment and silently injected into the wrong place. See `plugins/yolo/__init__.py`.
-- In the UI, call `_tlcAliasSettingsHtml(prefix, project, folder)` to render the alias form
-- Call `_tlcBindAliasToggle(prefix)` and `_tlcBindAliasAutoUpdate(prefix, projectInputId, folderInputId)`
-- At submit time, call `_tlcGetAliasValues(prefix)` and include in the POST body
-- After programmatic form fills (e.g. config load), call `_tlcSyncAliasFromForm(prefix, projectId, folderId)`
-- See `importer/__init__.py` and `sam3/runner.py` for working examples
-
-**SocketIO** (if real-time updates needed):
-- `socketio_namespace` is optional — it defaults to `/<plugin-id>`, which the host
-  auto-registers at startup (no shared file changes); declare it in the manifest's
-  `[runtime]` only to override that default. Either way the UI can subscribe to the generic
-  `job_update` channel; you do **not** need to emit anything custom.
-- Prefer the `window.PluginJobs` client over a hand-rolled socket — see
-  [Real-Time Updates](#real-time-updates-windowpluginjobs--custom-events).
-- Use `ctx.emit(name, payload)` only for telemetry the generic schema can't express
-  (e.g. a loss curve); never re-emit the generic lifecycle by hand.
-- `socketio_runner_module`/`socketio_runner_fn` are legacy and unnecessary for `run_job`
-  plugins.
-
-### Common Mistakes to Avoid
-
-- Don't add a `register()` call or metadata class attributes — the manifest is the only metadata source
-- Don't add plugin-specific logic to the frontend (templates, JS modules)
-- Don't use bare `fetch()` in the UI — always use `PLUGIN_API.authFetch()`
-- Don't hardcode colors — use CSS variables
-- Don't forget to handle errors in both backend and frontend
-- Don't create new shared utilities for one-off operations
-- Don't duplicate the alias UI HTML/JS — use `tlc_plugin_sdk/shared/alias_ui.py`, injected at serve time via `inject_scripts()`
-- Don't grab `get_gpu_queue()`, build a `GpuJob`, or push a closure — implement `run_job(ctx)`
-- Don't implement `get_active_jobs`/`cancel_job` or add `/queue`,`/cancel` routes — host-owned
-- Don't `async`-define `run_job` — it runs synchronously on a host/worker thread; poll `ctx.cancelled`
-
-### Testing
-
-- Add tests in `compute-service/tests/test_<plugin_name>.py`
-- Use the TestClient factory from `conftest.py`
-- Test both success and error paths for all endpoints
-- For `run_job(ctx)`, drive it with a fake `JobContext` (a recording sink + a
-  `threading.Event` for cancel) and assert the emitted `progress`/`metric`/`result`
-  events — no GPU/queue needed. See `tests/test_venv_jobs.py` for the manager-level path.
+Agent-facing guidance for building a plugin end-to-end (reading order, step-by-step,
+code patterns, common mistakes, testing) lives in this repo's
+[`CLAUDE.md`](https://github.com/3lc-ai/3lc-compute-plugin-sdk/blob/main/CLAUDE.md).

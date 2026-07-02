@@ -5,8 +5,8 @@
 A plugin is a subclass of :class:`ComputePlugin`. The base declares the
 *behavioral* surface the host (or an out-of-process worker) invokes; all
 *metadata* (id, name, ui placement, gpu flag, socketio namespace, …) lives in
-the plugin manifest (``[tool.tlc-compute]`` in ``plugin.toml`` / ``pyproject.toml``;
-see ``plugins/manifest.py``), the single source of truth. There is **no
+the plugin manifest (``[tool.tlc-compute]`` in ``plugin.toml`` /
+``pyproject.toml``), the single source of truth. There is **no
 metadata on the class** and **no** ``register()`` call at import — the host
 discovers a plugin via its manifest ``entrypoint`` and hydrates the instance's
 display identity (``id``/``name``/``icon``/``version``) from the card after
@@ -88,11 +88,9 @@ class ComputePlugin(ABC):
         msg = f"Plugin '{plugin_id}' does not implement run_job()"
         raise NotImplementedError(msg)
 
-    # Job listing (get_active_jobs), the busy check (has_running_jobs), and cancel
-    # (cancel_job) deliberately do NOT live on the plugin: the host JobManager owns
-    # every job's lifecycle (it started it via run_job), so it reports active jobs
-    # (GET /api/plugins/jobs), gates reload/unload (registry busy-check seam), and
-    # cancels (POST /jobs/{id}/cancel). A plugin only implements run_job.
+    # Job listing, busy checks, and cancellation deliberately do NOT live on the
+    # plugin: the host owns every job's lifecycle (it started the job via run_job),
+    # so it lists, gates, and cancels. A plugin only implements run_job.
 
     def get_route_handlers(self) -> list[Any]:
         """Return the plugin's custom routes as relative Litestar route handlers.

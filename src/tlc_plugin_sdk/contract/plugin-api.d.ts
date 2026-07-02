@@ -1,24 +1,15 @@
-// =============================================================================
-// <copyright>
-// Copyright (c) 2026 3LC Inc. All rights reserved.
-//
-// All rights are reserved. Reproduction or transmission in whole or in part, in
-// any form or by any means, electronic, mechanical or otherwise, is prohibited
-// without the prior written permission of the copyright owner.
-// </copyright>
-// =============================================================================
+// Copyright 2026 3LC Inc.
+// SPDX-License-Identifier: Apache-2.0
 //
 // JS_CONTRACT 0.1 — the browser-side plugin contract.
 //
 // This file DECLARES the JavaScript surface a plugin's `ui.html` programs against.
 // It does not implement it:
 //
-//   * `PLUGIN_API`, `TlcApi`, `TlcData` are IMPLEMENTED by the Hub frontend
-//     (3lc-hub-frontend/frontend/static/js/plugin-loader.js `mountPlugin`,
-//     api-client.js, data-helpers.js). The frontend builds `window.PLUGIN_API`
-//     when it mounts a plugin fragment.
+//   * `PLUGIN_API`, `TlcApi`, `TlcData` are IMPLEMENTED by the 3LC Hub frontend,
+//     which builds `window.PLUGIN_API` when it mounts a plugin fragment.
 //
-//   * `window.PluginJobs` SHIPS FROM THIS PACKAGE (`3lc-plugin-sdk`): it is the
+//   * `window.PluginJobs` SHIPS FROM THIS PACKAGE: it is the
 //     injectable client in `tlc_plugin_sdk.shared.job_tracker`
 //     (`JOB_TRACKER_JS`), which a plugin injects into its fragment via
 //     `inject_scripts(raw, job_tracker_script())`. It is NOT part of the host

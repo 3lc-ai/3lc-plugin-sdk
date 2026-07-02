@@ -3,8 +3,8 @@
 r"""Shared UI component for URL alias overrides.
 
 Generates the HTML + JS block that plugins embed in their UI fragments.
-This ensures consistent alias override UI across exporter, YOLO, timm,
-SAM3, and any future plugin that consumes existing 3LC tables.
+This ensures a consistent alias override UI across every plugin that
+consumes existing 3LC tables.
 
 The override section is automatically hidden when all alias paths are
 already local to the compute service (i.e. accessible on disk).

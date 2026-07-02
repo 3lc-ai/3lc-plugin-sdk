@@ -2,17 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 """``JobContext`` — the surface a plugin's ``run_job`` programs against.
 
-This is the v2 job-execution contract from ``docs/plugin-isolation.md``. A plugin
-implements ``run_job(ctx)`` and only ever touches ``ctx`` — it never grabs the
-host GPU queue or polls a shared ``cancel_flag``. The same object is used in both
-``host`` and ``venv`` modes; only the **sink** (where emitted events go) and the
-**cancel signal** differ:
+A plugin implements ``run_job(ctx)`` and only ever touches ``ctx`` — it never
+grabs a host queue or polls a shared ``cancel_flag``. The same object is used in
+both ``host`` and ``venv`` modes; only the **sink** (where emitted events go) and
+the **cancel signal** differ:
 
 - ``venv`` mode: the worker harness gives a sink that enqueues events for the
   streamed control-channel response, and a ``threading.Event`` set by the worker's
   ``/cancel`` endpoint.
-- ``host`` mode (later): the host gives a sink that relays straight to SocketIO and
-  a cancel event tied to the host queue.
+- ``host`` mode: the host gives a sink that relays straight to SocketIO and a
+  cancel event tied to the host's job manager.
 
 Import-light: stdlib only. Must not pull in the server stack.
 """

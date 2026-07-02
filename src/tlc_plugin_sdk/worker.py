@@ -23,9 +23,9 @@ it adds the venv job channel the host supervisor drives:
 Because the worker runs a real Litestar app, a plugin's custom routes get the same
 router, validation, multipart, and binary/streaming behavior they get in host mode —
 and Litestar runs synchronous ``def`` handlers in a threadpool, so CPU-bound routes
-don't block the worker's event loop. Litestar + uvicorn are base ``tlc-compute``
-dependencies (Litestar is also pulled transitively by ``3lc``); they are imported
-here, not by the import-light :mod:`tlc_plugin_sdk` package surface.
+don't block the worker's event loop. Litestar + uvicorn are base dependencies of
+this SDK; they are imported here, not by the import-light :mod:`tlc_plugin_sdk`
+package surface.
 """
 
 from __future__ import annotations

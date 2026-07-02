@@ -34,7 +34,7 @@ format, custom routes, the job model, UI fragment, checklist).
 `tlc_plugin_sdk.SDK_CONTRACT_VERSION` is this package's own version — one source of truth.
 A plugin pins the SDK (`3lc-compute-plugin-sdk>=X,<Y`) and declares the contract it targets via its
 manifest. The host implements a contract range and the SDK version is the lingua franca that
-both sides agree on. Versions are SemVer; `< 1.0` means the contract is not yet frozen.
+both sides agree on. Versions are SemVer; see **Status** below for the 0.x stability stance.
 
 ## Boundary (the one rule)
 
@@ -44,4 +44,7 @@ needs `tlc_plugin_sdk`, it is portable across host versions and can run in its o
 
 ## Status
 
-Pre-1.0 — the contract is still being hardened toward a freeze.
+**0.1 is the released contract line.** Within 0.x the contract evolves **additively only**:
+symbols and schemas that exist keep working, and anything breaking waits for a major bump. In
+the browser bridge, `PLUGIN_API.libs.io` is a stable part of the contract; the other bundled
+libs are best-effort (see the guide).

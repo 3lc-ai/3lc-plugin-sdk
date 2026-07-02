@@ -3,8 +3,8 @@
 r"""Shared UI component for URL alias settings.
 
 Generates the HTML + JS block that plugins embed in their UI fragments.
-This ensures consistent alias UI across importer, SAM3, and any future
-plugin that creates 3LC tables.
+This ensures a consistent alias UI across every plugin that creates
+3LC tables.
 
 Usage in a plugin's ``get_ui_fragment()``::
 

@@ -311,9 +311,9 @@ def list_image_urls(folder: Any, max_count: int = 10000) -> list[str]:
         try:
             entries = list(UrlAdapterRegistry.list_dir(current))
         except FileNotFoundError:
-            # The folder simply does not exist — a benign empty result, same as
-            # the old Path.exists() guard. (Deeper in the walk this would be a
-            # race: a subfolder vanished between listing and visiting it.)
+            # The folder simply does not exist — a benign empty result. (Deeper
+            # in the walk this is a race: a subfolder vanished between listing
+            # and visiting it.)
             logger.debug("Folder does not exist: %s", current)
             is_root = False
             continue

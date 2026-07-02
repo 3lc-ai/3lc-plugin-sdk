@@ -3,8 +3,8 @@
 """Shared modality detection — single source of truth for all table/schema inspection.
 
 Detects whether a table represents a detection, classification, segmentation,
-pose, or OBB task by walking the schema tree. Used by insights, YOLO, SAM3,
-and timm plugins.
+pose, or OBB task by walking the schema tree. Used by insights, training, and
+auto-labeling plugins.
 """
 
 from __future__ import annotations

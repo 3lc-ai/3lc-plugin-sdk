@@ -8,9 +8,8 @@ from the plugin UI (the "New config" / config-bar feature driven by
 service/host settings (those live in ``persistent_settings`` / ``settings.json``).
 
 Each plugin keeps its own ``@dataclass`` config schema and hands the *type* to
-:class:`PluginConfigStore`, which owns the JSON-on-disk CRUD that was previously
-copy-pasted per plugin. The config dataclass must carry the common envelope
-fields the store manages:
+:class:`PluginConfigStore`, which owns the JSON-on-disk CRUD. The config
+dataclass must carry the common envelope fields the store manages:
 
 - ``id: str``         — assigned on first save
 - ``created: str``    — ISO timestamp, assigned on first save; list order key
@@ -50,10 +49,9 @@ class PluginConfigStore(Generic[T]):
             :func:`dataclasses.asdict` and ``config_cls(**known_fields)``.
         plugin_id: The plugin's manifest id; configs live under
             ``~/.3lc-plugin-configs/<plugin_id>/``.
-        legacy_dir: Optional pre-standardization directory. If the standardized
+        legacy_dir: Optional back-compat directory. If the standardized
             directory has no configs yet and ``legacy_dir`` holds some, they are
-            moved on construction (one-time, idempotent). Remove the argument
-            once the cutover is complete.
+            moved on construction (one-time, idempotent).
 
     """
 

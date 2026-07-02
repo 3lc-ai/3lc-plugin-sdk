@@ -5,8 +5,7 @@
 This is the public import path for the plugin contract. Importing it must **not**
 pull in the heavy server stack (litestar, python-socketio, uvicorn, the queues,
 discovery): a ``venv``-mode plugin installs only this surface, not the full
-service. See ``docs/plugin-isolation.md`` → "The SDK boundary: import-light
-module". The :mod:`test_plugin_sdk_import_light` test enforces the boundary.
+service. The ``tests/test_import_light.py`` test enforces the boundary.
 
 A plugin subclasses :class:`ComputePlugin` and implements at least
 ``compute``/``get_ui_fragment``; the optional job/lifecycle hooks ship as no-op

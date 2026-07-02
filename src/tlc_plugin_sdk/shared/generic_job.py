@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Shared helper for translating training progress into the generic progress schema.
 
-Used by the YOLO and timm plugins inside ``run_job``: they compute an
+Used by training plugins inside ``run_job``: they compute an
 epoch/batch progress dict and call :func:`epoch_progress` to render the generic
 ``{percent, label, timing}`` shape the frontend understands, which they then push
 through their own ``ctx.emit`` channel. (The host owns job *listing* and *cancel*;
@@ -25,7 +25,7 @@ def epoch_progress(
 ) -> dict[str, Any] | None:
     """Build progress dict from epoch/batch-based training progress.
 
-    Common to YOLO and timm plugins.
+    Common to epoch-based training plugins.
     """
     if not progress:
         return None

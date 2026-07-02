@@ -73,10 +73,9 @@ def register_alias(
 
     try:
         # Track whether a session alias for this token already existed, so the
-        # caller (e.g. the importer) knows whether it created one and should
-        # clean it up afterwards. 3.x dropped the PRIMARY/SECONDARY precedence
-        # model — aliases are now a single flat namespace — so we compare against
-        # the public alias snapshot instead of the old private precedence dict.
+        # caller knows whether it created one and should clean it up afterwards.
+        # Aliases are a single flat namespace in 3.x, so the public alias
+        # snapshot is the thing to compare against.
         existed = f"<{token}>" in tlc.url.get_registered_url_aliases()
 
         # 1. Persist the alias in the project config.

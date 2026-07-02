@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "3lc-compute-plugin-sdk"
 # The plugin-contract (ABI) version. This IS tlc_plugin_sdk.SDK_CONTRACT_VERSION
 # (read back via importlib.metadata) — one source of truth. SemVer MAJOR.MINOR.PATCH;
-# < 1.0 signals the contract is not yet frozen. See docs/plugin-guide.md.
+# the 0.x line is additive-only (see README → Status).
 version = "0.1.0"
 description = "Public Python SDK for building 3LC compute-service plugins (the import-light plugin contract)."
 requires-python = ">=3.10"
@@ -95,8 +95,8 @@ explicit = true
 
 [tool.uv.sources]
 # 3lc from the releases index (the shippable form). LOCAL DEV: if your interpreter lacks a
-# prebuilt 3lc wheel on the index, override locally (uncommitted) with
-# `3lc = { path = "../tlc-monorepo", editable = true }`.
+# prebuilt 3lc wheel on the index, override locally (uncommitted) with an editable path
+# source pointing at your own 3lc checkout.
 3lc = { index = "3lc-releases" }
 
 [tool.ruff]

@@ -29,7 +29,7 @@ surface (`ComputePlugin` / `JobContext`), `JS_CONTRACT` the browser surface
 
 The `.d.ts` ships in the wheel at
 `<site-packages>/tlc_plugin_sdk/contract/plugin-api.d.ts`; a plain-JS `ui.html` references
-it with `/// <reference types="3lc-plugin-sdk/contract/plugin-api" />`.
+it with `/// <reference types="3lc-compute-plugin-sdk/contract/plugin-api" />`.
 
 ## The browser contract (`JS_CONTRACT`)
 
