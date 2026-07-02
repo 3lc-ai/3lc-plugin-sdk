@@ -3,9 +3,11 @@
 [![Docs](https://img.shields.io/badge/docs-3lc--ai.github.io-blue)](https://3lc-ai.github.io/3lc-compute-plugin-sdk/)
 [![Try it](https://img.shields.io/badge/try%20it-use%20the%20plugin%20template-brightgreen)](https://github.com/3lc-ai/3lc-compute-plugin-template/generate)
 
-The public Python SDK for building plugins for the [3LC](https://3lc.ai) [compute service](https://docs.3lc.ai/3lc/latest/hub/index.html) — the
-**import-light contract** a plugin programs against. Install this (not the full service)
-and you have everything you need to write, run, and serve a plugin.
+Plugins are how you extend the [3LC Hub](https://docs.3lc.ai/3lc/latest/hub/index.html) —
+your own importers, exporters, training jobs, and data tools, appearing in the Hub right
+next to the built-ins. This SDK is everything a plugin needs: one small Python package to
+program against, while the Hub takes care of discovery, isolation, serving, and job
+orchestration.
 
 ```bash
 pip install 3lc-compute-plugin-sdk          # import name: tlc_plugin_sdk
